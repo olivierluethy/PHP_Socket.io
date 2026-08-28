@@ -77,7 +77,7 @@ final class Kernel
         if ($method === 'POST' && preg_match('#/sessions$#', $path)) {
             return $this->create($request, $cors);
         }
-        if (preg_match('#/sessions/([^/]+)/(join|leave|actions|sync|stream|heartbeat)$#', $path, $m)) {
+        if (preg_match('#/sessions/([^/]+)/(join|leave|actions|sync|stream|heartbeat|emit)$#', $path, $m)) {
             $sessionId = $m[1];
             if (!Ids::isValidSession($sessionId)) {
                 throw new NotFoundException('Invalid session id');
@@ -87,6 +87,7 @@ final class Kernel
                 'leave' => $this->requirePost($method, fn () => $this->leave($request, $sessionId, $cors)),
                 'actions' => $this->requirePost($method, fn () => $this->actions($request, $sessionId, $cors)),
                 'heartbeat' => $this->requirePost($method, fn () => $this->heartbeat($request, $sessionId, $cors)),
+                'emit' => $this->requirePost($method, fn () => $this->emit($request, $sessionId, $cors)),
                 'sync' => $this->sync($request, $sessionId, $cors),
                 'stream' => $this->stream($request, $sessionId, $cors),
                 default => throw new NotFoundException(),
@@ -144,6 +145,25 @@ final class Kernel
     private function heartbeat(Request $request, string $sessionId, array $cors): Response
     {
         $result = $this->service->heartbeat($this->authFor($request, $sessionId));
+        return Response::json($result, 200, $cors);
+    }
+
+    private function emit(Request $request, string $sessionId, array $cors): Response
+    {
+        $secret = $this->config->serviceSecret;
+        $presented = $request->header('x-realtime-service') ?? '';
+        if ($secret === '' || !hash_equals($secret, $presented)) {
+            throw new UnauthorizedException('Invalid service credentials');
+        }
+
+        $body = $request->json();
+        $type = $this->optionalString($body, 'type');
+        if ($type === null || $type === '') {
+            throw new RealtimeException('Missing event type', 400);
+        }
+        $statePatch = isset($body['statePatch']) && is_array($body['statePatch']) ? $body['statePatch'] : null;
+
+        $result = $this->service->systemEvent($sessionId, $type, $this->arrayField($body, 'payload'), $statePatch);
         return Response::json($result, 200, $cors);
     }
 

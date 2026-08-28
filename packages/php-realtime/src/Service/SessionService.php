@@ -157,6 +157,32 @@ final class SessionService
         return ['version' => $event->seq, 'event' => $event->toArray()];
     }
 
+    /**
+     * Append an event (and optionally patch state) as a trusted server, with no
+     * participant token or role check. This is the fan-out path for an existing
+     * backend that keeps its own domain logic (e.g. a Node REST API) and just
+     * wants the module to broadcast + persist the event. Authenticate the caller
+     * at the transport boundary with the service secret.
+     *
+     * @param array<string,mixed> $payload
+     * @param array<string,mixed>|null $statePatch shallow-merged into state when given
+     * @return array<string,mixed>
+     */
+    public function systemEvent(string $sessionId, string $type, array $payload, ?array $statePatch = null): array
+    {
+        if ($this->storage->findSession($sessionId) === null) {
+            throw new NotFoundException('Session not found');
+        }
+        /** @var EventRecord $event */
+        $event = $this->storage->mutate($sessionId, function (SessionRecord $sess) use ($sessionId, $type, $payload, $statePatch): EventRecord {
+            $state = $statePatch !== null ? array_merge($sess->state, $statePatch) : $sess->state;
+            return $this->storage->commitMutation($sessionId, $state, $sess->version + 1, $type, $payload, 'system');
+        });
+        $this->storage->pruneEvents($sessionId, $this->config->eventRetention);
+
+        return ['version' => $event->seq, 'event' => $event->toArray()];
+    }
+
     // ---- Presence -----------------------------------------------------------
 
     /** @return array<string,mixed> */

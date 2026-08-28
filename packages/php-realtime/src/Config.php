@@ -36,6 +36,14 @@ final class Config
         /** Participant token lifetime in seconds (default 12h). */
         public readonly int $tokenTtl = 43200,
 
+        /**
+         * Shared secret authenticating trusted server-to-server calls (the
+         * `POST /sessions/{id}/emit` fan-out path). Lets an existing backend
+         * (e.g. a Node REST API) append events without a participant token.
+         * Empty disables that endpoint.
+         */
+        public readonly string $serviceSecret = '',
+
         /** Long-poll: max seconds a /sync request may block waiting for events. */
         public readonly int $longPollTimeout = 25,
         /** Short-poll: client fallback interval hint (ms) surfaced to the client. */
@@ -96,6 +104,7 @@ final class Config
             'redisUrl' => (string) $env('RT_REDIS_URL', $d->redisUrl),
             'tokenSecret' => (string) $env('RT_TOKEN_SECRET', $d->tokenSecret),
             'tokenTtl' => (int) $env('RT_TOKEN_TTL', $d->tokenTtl),
+            'serviceSecret' => (string) $env('RT_SERVICE_SECRET', $d->serviceSecret),
             'longPollTimeout' => (int) $env('RT_LONGPOLL_TIMEOUT', $d->longPollTimeout),
             'shortPollInterval' => (int) $env('RT_SHORTPOLL_INTERVAL', $d->shortPollInterval),
             'pollIntervalUs' => (int) $env('RT_POLL_INTERVAL_US', $d->pollIntervalUs),
