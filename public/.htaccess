@@ -1,0 +1,10 @@
+# Route all /realtime/* requests to the module front controller; serve the demo
+# statics directly. Drop this in the web root on Apache shared hosting.
+RewriteEngine On
+
+# Existing files (index.html, client.js, realtime-client.js) serve as-is.
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Everything under /realtime goes to the front controller.
+RewriteRule ^realtime(/.*)?$ realtime.php [QSA,L]
