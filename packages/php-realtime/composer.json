@@ -1,0 +1,23 @@
+{
+    "name": "tunevote/php-realtime",
+    "description": "Framework-agnostic, PHP-native real-time session backend: authoritative DB state + append-only event log, delta sync over long-poll/short-poll/SSE, per-session locking, presence, roles and signed tokens. No persistent Node/WebSocket process required.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["realtime", "long-polling", "sse", "sessions", "presence", "socket.io-alternative"],
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*",
+        "ext-pdo": "*"
+    },
+    "suggest": {
+        "ext-redis": "Enables the optional Redis storage driver (pub/sub fan-out + locks) for lower latency and horizontal scaling."
+    },
+    "autoload": {
+        "psr-4": {
+            "Realtime\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
