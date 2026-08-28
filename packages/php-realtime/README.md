@@ -92,6 +92,7 @@ All config is env-driven — no hardcoded URLs.
 | `GET /sessions/{id}/sync?since=` | (token) | `{kind:'events', events, cursor}` or `{kind:'snapshot', snapshot}` |
 | `GET /sessions/{id}/stream?since=` | `?token=` | SSE stream (Tier B) |
 | `POST /sessions/{id}/heartbeat` | — (token) | `{count, participants, nextHeartbeatMs}` |
+| `POST /sessions/{id}/emit` | `{type, payload?, statePatch?}` (`X-Realtime-Service` secret) | `{version, event}` — trusted server-to-server fan-out (see the TuneVote integration) |
 
 Tokens are sent as `Authorization: Bearer <token>`, the `X-Realtime-Token`
 header, or `?token=` (for SSE `EventSource`).
