@@ -51,9 +51,18 @@ final class SessionService
      * @param array<string,mixed> $ownerMeta
      * @return array<string,mixed>
      */
-    public function create(?string $ownerId, array $initialState = [], array $ownerMeta = []): array
+    public function create(?string $ownerId, array $initialState = [], array $ownerMeta = [], ?string $sessionId = null): array
     {
-        $sessionId = Ids::session();
+        if ($sessionId !== null) {
+            if (!Ids::isValidSession($sessionId)) {
+                throw new \Realtime\Exception\RealtimeException('Invalid session id', 400);
+            }
+            if ($this->storage->findSession($sessionId) !== null) {
+                throw new \Realtime\Exception\RealtimeException('Session already exists', 409);
+            }
+        } else {
+            $sessionId = Ids::session();
+        }
         $ownerId ??= Ids::participant();
 
         $this->storage->createSession($sessionId, $ownerId, $initialState, []);

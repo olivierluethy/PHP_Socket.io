@@ -106,6 +106,7 @@ final class Kernel
             $this->optionalString($body, 'ownerId'),
             $this->arrayField($body, 'state'),
             $this->arrayField($body, 'meta'),
+            $this->optionalString($body, 'sessionId'),
         );
         return Response::json($result, 201, $cors);
     }

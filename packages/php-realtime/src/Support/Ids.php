@@ -19,9 +19,13 @@ final class Ids
         return $prefix . bin2hex(random_bytes(6));
     }
 
-    /** Validate an externally-supplied session id shape (defence against traversal / injection). */
+    /**
+     * Validate an externally-supplied session id. Accepts the module's own hex
+     * ids plus app-supplied ids (integer PKs, slugs like "global") — anything
+     * URL-safe and free of path separators, so it is safe against traversal.
+     */
     public static function isValidSession(string $id): bool
     {
-        return (bool) preg_match('/^[a-f0-9]{8,64}$/', $id);
+        return (bool) preg_match('/^[A-Za-z0-9_-]{1,64}$/', $id);
     }
 }
