@@ -110,6 +110,23 @@ client.on('queue.add', () => reloadQueue());
 await client.emit('queue.add', { item });
 ```
 
+## Tests
+
+The suite is **dependency-free** — it runs the full `SessionService` against an
+in-memory `StorageDriver` double, so no database (and no Composer/PHPUnit) is
+required:
+
+```bash
+php tests/run.php                 # or: composer test
+php tests/run.php --filter=Token  # run a subset
+```
+
+It covers the guarantees this module rests on: signed-token verification
+(tamper/expiry/wrong-secret), server-authoritative permission enforcement, the
+optimistic version check (no lost updates), fixed-window rate limiting,
+snapshot-on-gap resync + event retention, and presence timeout/broadcast. CI
+(`.github/workflows/ci.yml`) runs it on PHP 8.1–8.4.
+
 ## What's out of scope
 
 True bidirectional WebSocket push and sub-100 ms fan-out **at scale** need a

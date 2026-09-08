@@ -200,11 +200,13 @@ final class SessionService
         $sessionId = $actor->sessionId;
         $this->storage->heartbeat($sessionId, $actor->userId);
 
-        $before = $this->storage->activeCount($sessionId, $this->config->presenceTtl);
-        $this->storage->pruneStaleParticipants($sessionId, $this->config->presenceTtl);
-        $after = $this->storage->activeCount($sessionId, $this->config->presenceTtl);
+        // Lazy reaper: prune anyone past the TTL and, if a silent disconnect was
+        // actually reaped, append one presence event so other clients watching
+        // the event stream see the viewer count drop (mirrors the Node reaper's
+        // rebroadcast — without it a closed tab only surfaces on the next resync).
+        $reaped = $this->storage->pruneStaleParticipants($sessionId, $this->config->presenceTtl);
 
-        if ($after !== $before && $this->storage->findSession($sessionId) !== null) {
+        if ($reaped > 0 && $this->storage->findSession($sessionId) !== null) {
             $this->storage->mutate($sessionId, function (SessionRecord $sess) use ($sessionId): void {
                 $payload = $this->presencePayload($sessionId, ['event' => 'timeout']);
                 $this->storage->commitMutation($sessionId, $sess->state, $sess->version + 1, 'presence', $payload, null);
@@ -213,7 +215,7 @@ final class SessionService
         }
 
         return [
-            'count' => $after,
+            'count' => $this->storage->activeCount($sessionId, $this->config->presenceTtl),
             'participants' => $this->roster($sessionId),
             'nextHeartbeatMs' => $this->config->heartbeatInterval * 1000,
         ];

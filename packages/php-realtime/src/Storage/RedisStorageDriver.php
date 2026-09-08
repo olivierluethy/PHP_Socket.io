@@ -261,16 +261,19 @@ final class RedisStorageDriver implements StorageDriver
         return count($this->activeParticipants($sessionId, $ttlSeconds));
     }
 
-    public function pruneStaleParticipants(string $sessionId, int $ttlSeconds): void
+    public function pruneStaleParticipants(string $sessionId, int $ttlSeconds): int
     {
         $cutoff = time() - $ttlSeconds;
         $all = $this->redis->hGetAll($this->k($sessionId, ':p')) ?: [];
+        $removed = 0;
         foreach ($all as $userId => $json) {
             $data = json_decode((string) $json, true);
             if ((int) ($data['last_heartbeat_at'] ?? 0) < $cutoff) {
                 $this->redis->hDel($this->k($sessionId, ':p'), (string) $userId);
+                $removed++;
             }
         }
+        return $removed;
     }
 
     // ---- Rate limiting ------------------------------------------------------
