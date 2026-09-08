@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Lint & test (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.2', '8.3', '8.4']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: json, pdo
+          coverage: none
+
+      - name: Lint (php -l) over the module
+        working-directory: packages/php-realtime
+        run: find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run the test suite (no dependencies required)
+        working-directory: packages/php-realtime
+        run: php tests/run.php

@@ -258,12 +258,13 @@ final class MySqlStorageDriver implements StorageDriver
         return (int) $stmt->fetchColumn();
     }
 
-    public function pruneStaleParticipants(string $sessionId, int $ttlSeconds): void
+    public function pruneStaleParticipants(string $sessionId, int $ttlSeconds): int
     {
         $stmt = $this->pdo->prepare(
             "DELETE FROM {$this->participants} WHERE session_id = ? AND last_heartbeat_at < ?"
         );
         $stmt->execute([$sessionId, time() - $ttlSeconds]);
+        return $stmt->rowCount();
     }
 
     // ---- Rate limiting ------------------------------------------------------

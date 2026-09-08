@@ -5,7 +5,7 @@
     "license": "MIT",
     "keywords": ["realtime", "long-polling", "sse", "sessions", "presence", "socket.io-alternative"],
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.1",
         "ext-json": "*",
         "ext-pdo": "*"
     },
@@ -16,6 +16,15 @@
         "psr-4": {
             "Realtime\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Realtime\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "php tests/run.php",
+        "lint": "find src tests -name '*.php' -print0 | xargs -0 -n1 php -l"
     },
     "config": {
         "sort-packages": true

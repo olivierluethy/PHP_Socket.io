@@ -95,7 +95,13 @@ interface StorageDriver
 
     public function activeCount(string $sessionId, int $ttlSeconds): int;
 
-    public function pruneStaleParticipants(string $sessionId, int $ttlSeconds): void;
+    /**
+     * Drop participants whose heartbeat is older than $ttlSeconds and return how
+     * many were removed, so the caller can broadcast a presence event only when a
+     * silent disconnect was actually reaped (the lazy equivalent of a reaper's
+     * rebroadcast). Returns 0 when nothing was stale.
+     */
+    public function pruneStaleParticipants(string $sessionId, int $ttlSeconds): int;
 
     // ---- Rate limiting ------------------------------------------------------
 
