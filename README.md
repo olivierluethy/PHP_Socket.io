@@ -8,6 +8,36 @@ MySQL hosting, with **no persistent Node process and no WebSocket daemon**.
 Built to retire the Socket.io VPS behind [TuneVote](https://tunevote.com), but
 the module is app-agnostic and reusable across projects.
 
+## At a glance
+
+- **No daemon, no VPS** — runs inside your existing PHP-FPM/Apache on shared or
+  cPanel-style hosting.
+- **Authoritative shared state** — one JSON snapshot per session + a monotonic
+  `version` and an append-only event log; late joiners get a snapshot, everyone
+  else gets deltas.
+- **No lost updates** — every mutation is serialised per session with an
+  optimistic version check.
+- **Batteries included** — presence/live counts, roles & permissions, HMAC
+  tokens, rate limiting, CORS, reconnect + snapshot-on-gap resync in the JS
+  client, optional Redis scale-out.
+- **Mechanical migration** — `socket.on(...)` → `client.on(...)`,
+  `socket.emit(...)` → `client.emit(...)`.
+
+Full usage examples (server handlers, the browser client, framework mounts,
+deployment and security notes) live in the
+[**module README**](packages/php-realtime/README.md#quick-start-a-shared-queue-in-40-lines).
+
+## Migrating from Socket.io
+
+| Socket.io | php-realtime |
+|---|---|
+| `io(url, { auth })` | `new RealtimeClient(url)` + `join()` / `attach()` |
+| `socket.on('evt', fn)` | `client.on('evt', fn)` |
+| `socket.emit('evt', data)` | `client.emit('action.type', data)` (server-authoritative) |
+| `io.to(room).emit(...)` | append an event via an action handler or `POST /emit` |
+| rooms | sessions (an id + authoritative state) |
+| connected sockets | presence (heartbeat + TTL, counted on read) |
+
 ## Layout
 
 | Path | What |
